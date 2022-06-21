@@ -125,6 +125,8 @@ type Config struct {
 	// IgnoreDefault instructs the library not to reset the variables to the
 	// default values, including pointers to sub commands
 	IgnoreDefault bool
+
+	IgnoreUnknownArgs bool
 }
 
 // Parser represents a set of command line options with destination values
@@ -571,6 +573,9 @@ func (p *Parser) process(args []string) error {
 		// we expand subcommands so it is better not to use a map)
 		spec := findOption(specs, opt)
 		if spec == nil {
+			if p.config.IgnoreUnknownArgs {
+				continue
+			}
 			return fmt.Errorf("unknown argument %s", arg)
 		}
 		wasPresent[spec] = true
@@ -643,7 +648,7 @@ func (p *Parser) process(args []string) error {
 			positionals = positionals[1:]
 		}
 	}
-	if len(positionals) > 0 {
+	if len(positionals) > 0 && !p.config.IgnoreUnknownArgs {
 		return fmt.Errorf("too many positional arguments at '%s'", positionals[0])
 	}
 
